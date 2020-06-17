@@ -23,24 +23,24 @@ public class PushJsonDataService {
 	private static final String PRM_MSG = "msg";
 	private static final String PRM_TOPIC = "topic";
 	
-	public<T> void pushToKafka(String json, Class<T> cls) throws Exception {
+	public<T> void pushToKafka(String json, Class<T> cls, String kafkaTopic) throws Exception {
 		List<String> jsonList = CommonUtil.parseJson(json);
 		Gson gson = new Gson();
 		for(String src: jsonList) {
 			T t = JsonReader.getObject(gson, src, cls);
 			logger.debug(""+t);
-			fireEvent(src);
+			fireEvent(src, kafkaTopic);
 		}
 	}
 	
-	public void transfer(File file) throws Exception {
+	public void transfer(File file, String kafkaTopic) throws Exception {
 		List<String> jsonList = CommonUtil.parseJsonFile(file, "UTF-8");
 		for(String jsonStr: jsonList) {
-			fireEvent(jsonStr);
+			fireEvent(jsonStr, kafkaTopic);
 		}
 	}
 	
-	private void fireEvent(String jsonStr) {
+	private void fireEvent(String jsonStr, String kafkaTopic) {
     	RestTemplate restTemplate = JsontokafkaApp.getBean(RestTemplate.class);
     	ApplicationProperties applicationProperties = JsontokafkaApp.getBean(ApplicationProperties.class);
 		String res = null;
@@ -48,7 +48,7 @@ public class PushJsonDataService {
 			res = IUtils.sendGetRestRequest(
 					restTemplate, 
 					applicationProperties.getKafkaUrl(),
-					IUtils.getRestParamMap(PRM_TOPIC,"test", PRM_MSG, jsonStr), 
+					IUtils.getRestParamMap(PRM_TOPIC, kafkaTopic, PRM_MSG, jsonStr), 
 					String.class);
 			logger.debug("Response : "+res);
 		} catch(Exception ex) {

@@ -40,8 +40,13 @@ public class PushJsonDataToKafkaController {
 		if(!fileName.toLowerCase().contains("json")) {
 			throw new RuntimeException("Unsupported file format. Only accept json file. " + fileName);
 		}
+		String kafkaTopic = criteriaMap.get("kafkaTopic");
+		if(org.apache.commons.lang3.StringUtils.isBlank(kafkaTopic)) {
+			throw new RuntimeException("Kafka topic not provided.");
+		}
+		
 		File f = getTemproraryFile(file);
-		pushJsonDataService.transfer(f);
+		pushJsonDataService.transfer(f, kafkaTopic);
 		f.delete();
 		logger.info("data transfer to kafka completed");
 	}
